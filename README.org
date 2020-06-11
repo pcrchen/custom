@@ -1,0 +1,3 @@
+This is a guide on how to set up on the ARC server for your own custom R scripts.
+
+* Table of contents                                                     :TOC:
