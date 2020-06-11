@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/bin/bash
 
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
@@ -7,7 +7,9 @@
 #SBATCH --mem=0
 #SBATCH --time=48:00:00
 #SBATCH --job-name=jobname
-#SBATCH --output=jobname.%J.out
+#SBATCH --output=slurm-%x-%J.out
+#SBATCH --mail-type=END,FAIL
+#SBATCH --mail-user=<username>@ucalgary.ca
 
 
 # Reads in Bash shell configuration to allow conda activation
@@ -18,3 +20,6 @@ conda activate your_environment
 
 # Commands
 Rscript your_R_script.R
+
+# Prints out date and time of completion
+data
