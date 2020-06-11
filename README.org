@@ -306,7 +306,7 @@ wget https://raw.githubusercontent.com/pcrchen/custom/main/slurm/template.slurm 
 nano ~/<path/to/your/desired/location>.slurm
 #+end_src
 
-After finishing editing with =nano=, press =ctrl+o= to save. Near the bottom there should be a prompt saying "File Name to Write", either just press =enter= to save to the same file or change the filename and then press =enter=. Once saved, press =ctrl-x= to exit.
+After finishing editing with =nano=, press =ctrl-o= to save. Near the bottom there should be a prompt saying "File Name to Write", either just press =enter= to save to the same file or change the filename and then press =enter=. Once saved, press =ctrl-x= to exit.
 
 More information on how to use =nano= editor [[https://www.howtogeek.com/howto/42980/the-beginners-guide-to-nano-the-linux-command-line-text-editor/][here]]
 
