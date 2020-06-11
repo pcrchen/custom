@@ -1,3 +1,445 @@
 This is a guide on how to set up on the ARC server for your own custom R scripts.
 
+It is strongly suggested to have some knowledge on using Unix command line interface (CLI). There are many many guides on the internet (search for "unix command line guide"). A non-exhaustive list of oft-used commands:
+- =man <command>= (view the manual of =<command>=, press =q= to exit the manual)
+- =ls= (list directory content)
+- =cd= (change directory)
+- =less= (view text file in a new screen, press =q= to exit the view)
+- =cat= (prints the content of text file to the terminal, be careful using this on large files)
+- =mv= (move or rename file or directory)
+- =cp= (copy file)
+- =rm= (remove file)
+- =rmdir= (remove empty directory)
+- =nano= (text editor, press =ctrl-x= to exit)
+
 * Table of contents                                                     :TOC:
+- [[#prepare-r-script][Prepare R script]]
+- [[#setup-on-server][Setup on Server]]
+  - [[#login-to-arc][Login to ARC]]
+  - [[#optional-remove-previous-conda-installation][(Optional) Remove previous conda installation]]
+  - [[#download-and-install-conda][Download and install conda]]
+  - [[#setup-conda-environment][Setup conda environment]]
+  - [[#install-packages-in-the-conda-environment][Install packages in the conda environment]]
+  - [[#transferring-files-to-the-server][Transferring files to the server]]
+    - [[#a-download-directly-from-a-shared-dropbox-folder-link][a. Download directly from a shared Dropbox folder link]]
+    - [[#b-use-rsync-to-copy-files-from-your-local-computer-to-the-server][b. Use =rsync= to copy files from your local computer to the server]]
+    - [[#c-use-mobaxterm-for-windows-users-to-transfer][c. Use MobaXterm for Windows users to transfer]]
+    - [[#d-use-cyberduck-for-windows-and-mac-users-to-transfer][d. Use Cyberduck for Windows and Mac users to transfer]]
+    - [[#side-note-on-files-structures][Side note on files structures]]
+  - [[#prepare-slurm-batch-script][Prepare Slurm batch script]]
+    - [[#example-slurm-script-for-running-example-msar][Example slurm script for running example-msa.R]]
+  - [[#submit-slurm-batch-script][Submit Slurm batch script]]
+  - [[#check-status-of-batch-script-job-submission][Check status of batch script job submission]]
+- [[#using-conda][Using conda]]
+  - [[#conda-environments][Conda environments]]
+  - [[#auto_activate_base][auto_activate_base]]
+  - [[#update-conda][Update conda]]
+  - [[#other-resources-for-conda][Other resources for conda]]
+
+* Prepare R script
+
+Before going to the server, it is preferable that you have finalized your R script locally with a smaller subset of your data. For demonstration, I have an R script, [[file:script/example-msa.R][example-msa.R]] that takes in a fasta file containing ASV sequences and output a fasta file with those sequences aligned.
+
+You should also have the version of the R and R packages you used for your script. Use =sessionInfo()= to show these information. (Make sure the packages are loaded first).
+
+Note that whenever you see texts in angular brackets like below, please change the text to what applies to you and also remove the angular brackets.
+
+#+begin_src bash
+<texts to change>
+#+end_src
+
+
+* Setup on Server
+
+** Login to ARC
+
+Make sure your VPN is on before logging by running the below command.
+
+#+begin_src bash
+ssh <username>@arc.ucalgary.ca
+#+end_src
+
+You will then be prompted to enter your password.
+
+** (Optional) Remove previous conda installation
+
+If you have previously installed conda and weren't sure what you were doing, I recommend removing conda and re-installing again by following the below steps.
+
+Remove conda (this might take a few minutes):
+
+#+begin_src bash
+rm -rf ~/miniconda3
+#+end_src
+
+Remove conda-related configuration files:
+
+#+begin_src bash
+rm -rf ~/.condarc ~/.conda
+#+end_src
+
+** Download and install conda
+
+Download =setup-conda.sh= helper script (to download and install conda) to your home directory (indicated by the =~= shorthand below).
+
+#+begin_src bash
+wget https://raw.githubusercontent.com/pcrchen/custom/main/script/setup-conda.sh -O ~/setup-conda.sh
+#+end_src
+
+Running the helper script will download the conda installer Miniconda and install  conda automatically. This process takes around 2-3 minutes.
+
+#+begin_src bash
+bash ~/nemabiome/script/setup-conda.sh
+#+end_src
+
+To check if conda was installed correctly, logout the server (type =exit=) and re-login again. You should see =(base)= beside your prompt (e.g. =(base) [username@arc ~]$=). This means that conda is installed and activated, and that you are currently on the default =base= conda environment. More information on conda environments [[#Conda-environments][here]].
+
+#+begin_src bash
+exit # exits the server
+ssh <username>@arc.ucalgary.ca
+#+end_src
+
+Another important thing to check is the priority order of the channels conda will use to install packages (configured in =~/.condarc= file). Conda channels are where packages are hosted on, and [[https://bioconda.github.io/user/install.html#set-up-channels][the priority order of the channels is important when you install packages]]. Although, running the =setup_conda.sh= script should have configured the channels properly for you, it doesn't hurt to double check.
+
+If you run the below command to print the content of =~/.condarc= to terminal,
+
+#+begin_src bash
+cat ~/.condarc
+#+end_src
+
+the file should look like this:
+
+#+begin_src bash
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+#+end_src
+
+As you can see, =conda-forge= should be at the top, followed by =bioconda=, and =defaults= at the bottom.
+
+If your conda file does not look like the above, run the below command to copy a correct =.condarc= file to your home directory.
+
+#+begin_src bash
+wget https://raw.githubusercontent.com/pcrchen/custom/main/script/.condarc -O ~/.condarc
+#+end_src
+
+** Setup conda environment
+
+I recommend the use of conda environments to have better reproducibility and avoid possible issues with conflicting packages in one environment. More information on what conda environments are [[#Conda-environments][here]].
+
+To create a new conda environment to install your packages in:
+
+#+begin_src bash
+conda create --name <environment-name>
+#+end_src
+
+For demonstration, I will be creating an environment called =msa=:
+
+#+begin_src bash
+conda create --name msa
+#+end_src
+
+To activate/deactivate a conda environment:
+
+#+begin_src bash
+conda activate <environment-name> # activate
+conda deactivate                  # deactivate
+#+end_src
+
+** Install packages in the conda environment
+
+Remember your R and R packages and their versions? These are needed to install them using conda.
+
+For =example-msa.R= script, I need =R= version 3.6.3, =optparse= package version 1.6.6, and =msa= package version 1.20.0. To check if they are available (most packages should be) and what the name the package is called on the conda channels we have, use the =conda search= command:
+
+#+begin_src bash
+conda search <package-name>
+
+# example
+conda search r-base   # this is R itself
+conda search optparse
+conda search msa
+#+end_src
+
+R packages will be prefixed with either =r-= or =bioconductor-=. From the conda searches, my packages and their versions are available (if not, use the nearest or latest version available).
+
+To install these packages into a specific conda environment use =conda install --name <environment-name>= command:
+
+#+begin_src bash
+conda install --name <environment-name> r-base=version r-packagename1=version r-packagename2=version
+
+# example
+conda install --name msa r-base=3.6.3 r-optparse=1.6.6 bioconductor-msa=1.20.0
+#+end_src
+
+The specific conda environment don't need to be activated to install if you use the =--name <environment-name>= flag in =conda install=.
+
+The installation may take several minutes (longer the more packages you are installing).
+
+** Transferring files to the server
+
+There are several options to transfer your files to the server. Your VPN must be on during this process to access ARC.
+
+*** a. Download directly from a shared Dropbox folder link
+
+Using the below command will save the content of in the Dropbox folder in a compressed .zip file located at =~/<path/sample>.zip=. Note the that when you copy the Dropbox shared folder link, at the end of the link is =?dl=0=; please remember to change the 0 to 1, i.e. =?dl=1=.
+
+#+begin_src bash
+curl -L -o ~/<path/sample>.zip https://www.dropbox.com/sh/<folder/link>?dl=1
+#+end_src
+
+Next we need to unzip the downloaded content. The files inside =~/<path/sample>.zip= will be unzipped into the directory =~/<directory/to/unzip/to/>=.
+
+#+begin_src bash
+unzip ~/<path/filename>.zip -d ~/<directory/to/unzip/to/>
+#+end_src
+
+Before running either the =curl= or =unzip= command, the directory you want to put the file(s) in must exist. If it doesn't exist, create it by using =mkdir=:
+
+#+begin_src bash
+mkdir -p ~/<path/to/directory>
+#+end_src
+
+*** b. Use =rsync= to copy files from your local computer to the server
+
+Note that the command below will not work if you are logged onto ARC. You can open another terminal window to run the below command, allowing you to stay logged onto ARC on your previous terminal window. I'm not sure if =rsync= will work on MobaXterm on Windows machines.
+
+#+begin_src bash
+rsync </path/to/local/directory/containing/your/files/> <username>@arc.ucalgary.ca:<path/to/directory/for/your/files/on/arc/>
+#+end_src
+
+You will be prompted to enter your ARC account password after entering the above command.
+
+*** c. Use MobaXterm for Windows users to transfer
+
+I believe there is an "up arrow" icon on the left panel to upload files. More information available [[https://usdrcg.gitbook.io/docs/lawrence-hpc/transferring-files#mobaxterm][in this guide]]. Note that this may not be a great option if you are uploading many and/or large files.
+
+*** d. Use Cyberduck for Windows and Mac users to transfer
+
+Detailed instructions can be found [[https://usdrcg.gitbook.io/docs/lawrence-hpc/transferring-files#cyberduck][in this guide]]. The settings for SFTP after clicking "Open Connection" will be different:
+
+- Server: arc.ucalgary.ca
+- Username: username for your ARC account
+- Password: password for your ARC account
+- SSH Private Key: None
+- Check "Save Password" if you want
+
+*** Side note on files structures
+
+I like to have a consistent file structure for each analysis pipeline. For this =example-msa.R= "pipeline", my files and directories will look like the following:
+
+#+begin_src
+~/msa                   # name of the analysis
+~/msa/data              # contains all raw data for this analysis
+~/msa/data/sample_set1/
+~/msa/data/sample_set2/
+~/msa/script            # scripts for running this analysis
+~/msa/slurm             # Slurm scripts for running this analysis
+~/msa/out               # contains all output for this analysis
+~/msa/out/sample_set1/
+~/msa/out/sample_set2/
+#+end_src
+
+** Prepare Slurm batch script
+
+ARC uses the Slurm job scheduler for managing batch script job submission. Please don't run any heavy computational commands on the login node. More information on the Slurm job scheduler [[#Other-resources-for-Slurm-job-scheduler][here]].
+
+Below is an example slurm script suitable for data size up to 6 GB uncompressed (=*.gz= compressed files are around ~4 times smaller).
+
+#+begin_src bash
+#!/bin/bash
+
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --partition=single,lattice
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=0
+#SBATCH --time=48:00:00
+#SBATCH --job-name=jobname
+#SBATCH --output=slurm-%x-%J.out
+#SBATCH --mail-type=END,FAIL
+#SBATCH --mail-user=<username>@ucalgary.ca
+
+
+# Reads in Bash shell configuration to allow conda activation
+source ~/.bashrc
+
+# Activate conda environment
+conda activate your_environment
+
+# Commands
+Rscript your_R_script.R
+
+# Prints out date and time of completion
+data
+#+end_src
+
+=SBATCH= options:
+- =#SBATCH --nodes=1= specifies the number of nodes to use. For our use cases, this should always be 1.
+- =#SBATCH --ntasks=1= specifies the number of tasks to use. For our use cases, this should always be 1.
+- =#SBATCH --partition=single,lattice= specifies the computing cluster this use on ARC. For more information on the available clusters and their resources see the table below. Here, it is requesting either the =single= or =lattice= cluster.
+- =#SBATCH --cpus-per-task=8= specifies the number of cores to use for multithreaded commands. Make sure you are specifying the same number as in your R script. Here, it is specifying 8 cores.
+- =#SBTACH --mem=0= specifies the amount of memory to use. The default unit is in MB. Here, with a value of 0, it is specifying to use all available memory on the node (that would be 12 GB for =single= and =lattice= nodes).
+- =#SBATCH --time=48:00:00= specifies the time limit for the job in HH:MM:SS format. You will have higher priority in the queue if this time limit value is lower. Here, the time limit is 48 hours.
+- =#SBATCH --job-name=jobname= specifies the name for this job. Here, the job name is =jobname=.
+- =#SBATCH --output=slurm-%x-%J.out= specifies the location to save the terminal output from the job submission. =%x= is the job name and =%J= is the job ID. Because the path doesn't begin with =/=, it is a relative path, and so the output file will be saved relative to the directory you submit the job using =sbatch=. If you want to make sure the output is always saved to the same directory, use an absolute path. e.g. =--output=/home/<username>/slurm/%x-%J.out=.
+- =#SBATCH --mail-type=END,FAIL= specifies if you want email notification. Here, an email will be sent when the job completes or fails. If you don't want this, change the value to =NONE=. You can also add another value to email you at the start of the job as well (=BEGIN,END,FAIL=).
+- =#SBATCH --mail-user=<username>@ucalgary.ca= specifies the email for the notifications. Here, email will be sent to =<username>@ucalgary.ca=.
+
+| Partition | Cores/node | Memory limit (MB) | Time limit (h) | GPUs/node |
+|-----------+------------+-------------------+----------------+-----------|
+| bigmem    |         80 |           3000000 |             24 |           |
+| cpu2019   |         40 |            185000 |            168 |           |
+| gpu-v100  |         40 |            753000 |             24 |         2 |
+| cpu2013   |         16 |            120000 |            168 |           |
+| parallel  |         12 |             23000 |            168 |           |
+| gpu       |         12 |             23000 |             72 |         3 |
+| lattice   |          8 |             12000 |            168 |           |
+| single    |          8 |             12000 |            168 |           |
+
+
+You can download this example Slurm batch script to ARC to edit using the command line interface text editor =nano=:
+
+#+begin_src bash
+wget https://raw.githubusercontent.com/pcrchen/custom/main/slurm/template.slurm -O ~/<path/to/your/desired/location>.slurm
+
+nano ~/<path/to/your/desired/location>.slurm
+#+end_src
+
+After finishing editing with =nano=, press =ctrl-o= to save. Near the bottom there should be a prompt saying "File Name to Write", either just press =enter= to save to the same file or change the filename and then press =enter=. Once saved, press =ctrl-x= to exit.
+
+More information on how to use =nano= editor [[https://www.howtogeek.com/howto/42980/the-beginners-guide-to-nano-the-linux-command-line-text-editor/][here]]
+
+*** Example slurm script for running example-msa.R
+
+Here I will be downloading the Slurm batch script template and edit using =nano= to run the =example-msa.R= script on a computing node.
+
+#+begin_src bash
+wget https://raw.githubusercontent.com/pcrchen/custom/main/slurm/template.slurm -O ~/msa/slurm/example.slurm
+
+nano ~/msa/slurm/example.slurm
+#+end_src
+
+My Slurm batch looks like below after editing:
+
+#+begin_src bash
+#!/bin/bash
+
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --partition=single,lattice
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=0
+#SBATCH --time=48:00:00
+#SBATCH --job-name=msa-example
+#SBATCH --output=/home/<username>/slurm/%x-%J.out
+#SBATCH --mail-type=END,FAIL
+#SBATCH --mail-user=<username>@ucalgary.ca
+
+
+# Reads in Bash shell configuration to allow conda activation
+source ~/.bashrc
+
+# Activate conda environment
+conda activate msa
+
+# Commands
+Rscript ~/msa/script/example-msa.R \
+        --input ~/msa/data/example/asv.fasta \
+        --output ~/msa/out/example/aligned_asv.fasta
+
+# Prints out date and time of completion
+data
+#+end_src
+
+For =example-msa.R=, I have specifically written it so that I can use command line arguments (e.g. those =--input= and =--output= flags you see), so that I don't have to edit =example-msa.R= each time I want to have different input and output files. Of course if you just specified the input and output files in your R script, the command under =# Commands= would just be this:
+
+#+begin_src bash
+# Commands
+Rscipt ~/path/name_of_Rscript.R
+#+end_src
+
+** Submit Slurm batch script
+
+With the Slurm batch script edited, run the below command to submit it with =sbatch=:
+
+#+begin_src bash
+sbatch ~/</path/to/your_slurm_script>.slurm
+
+# example
+sbatch ~/msa/slurm/example.slurm
+#+end_src
+
+** Check status of batch script job submission
+
+Using the =squeue= command can show the status of active jobs (either in queue or running) you have submitted.
+
+#+begin_src bash
+squeue -u <username>
+#+end_src
+
+An email may also be sent to you depending on your =--mail-type= setting.
+
+
+* Using conda
+
+** Conda environments
+
+Conda environments are used to compartmentalize your installed packages, because, for example, one may need to use different pipelines that require different versions of the same package.
+
+You can think of a conda environment as a physical lab, and the different conda environments are the different labs used for different purposes (e.g. molecular lab, parasitology lab, etc.). The equipment available in different labs are the different packages installed in each conda environment. If you activate a particular conda environment, you cannot access the packages installed in other environments, much like you cannot access the equipment in the parasitology lab when you are in the molecular lab.
+
+By default, conda will create the =base= environment for you, and you will be in the =base= conda environment when you first install and activate conda.
+
+You can activate a conda environment by running the following command:
+
+#+begin_src bash
+conda activate <environment-name>
+#+end_src
+
+Once activated, =(environment-name)= should replace =(base)= before your command prompt (e.g. =(environment-name) [username@arc ~]$=.
+
+To deactivate the environment:
+
+#+begin_src bash
+conda deactivate <environment-name>
+#+end_src
+
+To list the conda environments you have:
+
+#+begin_src bash
+conda info --env
+#+end_src
+
+More information on managing conda environments [[https://docs.conda.io/projects/conda/en/latest/user-guide/getting-started.html#managing-environments][here]].
+
+** auto_activate_base
+
+=auto_activate_base= is a configurable setting in conda. The default value is =True=, which means that conda will be automatically activated (shown by the =(base)= beside your command prompt) whenever you login to an account with conda installed (this would be your server account in this case).
+
+To turn this off, run the below command:
+
+#+begin_src bash
+conda config --set auto_activate_base False
+#+end_src
+
+I don't recommend turning this setting to =False=. Unless you want to use the module system provided on ARC, because the packages installed in conda base environment may conflict with the packages from the module system. I personally prefer to use conda for managing and installing packages, as it is well-documented and handles package dependencies pretty well.
+
+More information on configuring conda [[https://docs.conda.io/projects/conda/en/latest/user-guide/configuration/use-condarc.html][here]].
+
+** Update conda
+
+This will update only conda itself and not the packages installed via conda.
+
+#+begin_src bash
+conda update -n base -c defaults conda
+#+end_src
+
+** Other resources for conda
+
+- [[https://docs.conda.io/projects/conda/en/latest/user-guide/cheatsheet.html][Conda cheatsheet]] (very useful)
+- [[https://docs.conda.io/projects/conda/en/latest/user-guide/index.html][Conda documentation]]
+- [[https://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html][Installing conda on Linux]]
+- [[https://bioconda.github.io/user/install.html][Quick start on using Conda]]
+- [[https://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html#uninstalling-anaconda-or-miniconda][Uninstalling Miniconda3 on Linux]]
+
