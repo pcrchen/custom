@@ -1,6 +1,6 @@
 This is a guide on how to set up on the ARC server for your own custom R scripts.
 
-It is strongly suggested to have some knowledge on using Unix command line interface (CLI). There are many many guides on the internet (search for "unix command line guide"). A non-exhaustive list of oft-used commands:
+It is suggested to have some knowledge on using Unix command line interface (CLI). There are many many guides on the internet (e.g. search for "unix command line guide"). A non-exhaustive list of oft-used commands:
 - =man <command>= (view the manual of =<command>=, press =q= to exit the manual)
 - =ls= (list directory content)
 - =cd= (change directory)
@@ -25,7 +25,7 @@ It is strongly suggested to have some knowledge on using Unix command line inter
     - [[#b-use-rsync-to-copy-files-from-your-local-computer-to-the-server][b. Use =rsync= to copy files from your local computer to the server]]
     - [[#c-use-mobaxterm-for-windows-users-to-transfer][c. Use MobaXterm for Windows users to transfer]]
     - [[#d-use-cyberduck-for-windows-and-mac-users-to-transfer][d. Use Cyberduck for Windows and Mac users to transfer]]
-    - [[#side-note-on-files-structures][Side note on files structures]]
+    - [[#side-note-on-files-structures][Side note on files structures for this example]]
   - [[#prepare-slurm-batch-script][Prepare Slurm batch script]]
     - [[#example-slurm-script-for-running-example-msar][Example slurm script for running example-msa.R]]
   - [[#submit-slurm-batch-script][Submit Slurm batch script]]
@@ -39,9 +39,9 @@ It is strongly suggested to have some knowledge on using Unix command line inter
 
 * Prepare R script
 
-Before going to the server, it is preferable that you have finalized your R script locally with a smaller subset of your data. For demonstration, I have an R script, [[file:script/example-msa.R][example-msa.R]] that takes in a fasta file containing ASV sequences and output a fasta file with those sequences aligned.
+Before going to the server, it is preferable that you have finalized your R script locally with a smaller subset of your data. For demonstration, I have an R script, [[https://github.com/pcrchen/custom/blob/main/script/example-msa.R][example-msa.R]] that takes in a fasta file containing ASV sequences and output a fasta file with those sequences aligned.
 
-You should also have the version of the R and R packages you used for your script. Use =sessionInfo()= to show these information. (Make sure the packages are loaded first).
+You should also have the version of the R and R packages you used for your script. Use =sessionInfo()= to show these information. (Make sure the packages are loaded first via =library()=).
 
 Note that whenever you see texts in angular brackets like below, please change the text to what applies to you and also remove the angular brackets.
 
@@ -78,18 +78,21 @@ Remove conda-related configuration files:
 rm -rf ~/.condarc ~/.conda
 #+end_src
 
+=rm -rf ~/directory/= means force removing =~/directory/= and all files within =~/directory/=.
+
 ** Download and install conda
 
-Download =setup-conda.sh= helper script (to download and install conda) to your home directory (indicated by the =~= shorthand below).
+Download =setup-conda.sh= helper script (to download and install conda) to your home directory (the =~= shorthand below). The =\= at the end of the first means that the following line is the same command and not another separate command.
 
 #+begin_src bash
-wget https://raw.githubusercontent.com/pcrchen/custom/main/script/setup-conda.sh -O ~/setup-conda.sh
+wget https://raw.githubusercontent.com/pcrchen/custom/main/script/setup-conda.sh \
+    -O ~/setup-conda.sh
 #+end_src
 
-Running the helper script will download the conda installer Miniconda and install  conda automatically. This process takes around 2-3 minutes.
+Running the helper script will download the conda installer Miniconda and install conda automatically. This process takes around 2-3 minutes.
 
 #+begin_src bash
-bash ~/nemabiome/script/setup-conda.sh
+bash ~/setup-conda.sh
 #+end_src
 
 To check if conda was installed correctly, logout the server (type =exit=) and re-login again. You should see =(base)= beside your prompt (e.g. =(base) [username@arc ~]$=). This means that conda is installed and activated, and that you are currently on the default =base= conda environment. More information on conda environments [[#Conda-environments][here]].
@@ -99,7 +102,7 @@ exit # exits the server
 ssh <username>@arc.ucalgary.ca
 #+end_src
 
-Another important thing to check is the priority order of the channels conda will use to install packages (configured in =~/.condarc= file). Conda channels are where packages are hosted on, and [[https://bioconda.github.io/user/install.html#set-up-channels][the priority order of the channels is important when you install packages]]. Although, running the =setup_conda.sh= script should have configured the channels properly for you, it doesn't hurt to double check.
+Another important thing to check is the priority order of the channels conda will use to install packages from (configured in =~/.condarc= file). Conda channels are where packages are hosted on, and [[https://bioconda.github.io/user/install.html#set-up-channels][the priority order of the channels is important when you install packages]]. Although, running the =setup_conda.sh= script should have configured the channels properly for you, it doesn't hurt to double check.
 
 If you run the below command to print the content of =~/.condarc= to terminal,
 
@@ -121,7 +124,8 @@ As you can see, =conda-forge= should be at the top, followed by =bioconda=, and 
 If your conda file does not look like the above, run the below command to copy a correct =.condarc= file to your home directory.
 
 #+begin_src bash
-wget https://raw.githubusercontent.com/pcrchen/custom/main/script/.condarc -O ~/.condarc
+wget https://raw.githubusercontent.com/pcrchen/custom/main/script/.condarc -O \
+    ~/.condarc
 #+end_src
 
 ** Setup conda environment
@@ -143,8 +147,8 @@ conda create --name msa
 To activate/deactivate a conda environment:
 
 #+begin_src bash
-conda activate <environment-name> # activate
-conda deactivate                  # deactivate
+conda activate <environment-name> # activate env
+conda deactivate                  # deactivate env
 #+end_src
 
 ** Install packages in the conda environment
@@ -179,11 +183,13 @@ The installation may take several minutes (longer the more packages you are inst
 
 ** Transferring files to the server
 
-There are several options to transfer your files to the server. Your VPN must be on during this process to access ARC.
+There are several options to transfer your files to the server (I have listed 4 options below, a-d). Your VPN must be on during this process to access ARC.
+
+For Mac and Windows users, I recommend using CyberDuck (option d) to view files on the server that is similar to a file browser. CyberDuck can also be used to transfer files, but if you are transferring many and/or large files, =rsync= will have less issue. Windows users can also use MobaXterm (option c) to view and transfer files.
 
 *** a. Download directly from a shared Dropbox folder link
 
-Using the below command will save the content of in the Dropbox folder in a compressed .zip file located at =~/<path/sample>.zip=. Note the that when you copy the Dropbox shared folder link, at the end of the link is =?dl=0=; please remember to change the 0 to 1, i.e. =?dl=1=.
+Using the below command will save the content of in the shared Dropbox folder in a compressed .zip file located at =~/<path/sample>.zip=. Note the that when you copy the Dropbox shared folder link, at the end of the link is =?dl=0=; please remember to change the 0 to 1, i.e. =?dl=1=.
 
 #+begin_src bash
 curl -L -o ~/<path/sample>.zip https://www.dropbox.com/sh/<folder/link>?dl=1
@@ -206,17 +212,20 @@ mkdir -p ~/<path/to/directory>
 Note that the command below will not work if you are logged onto ARC. You can open another terminal window to run the below command, allowing you to stay logged onto ARC on your previous terminal window. I'm not sure if =rsync= will work on MobaXterm on Windows machines.
 
 #+begin_src bash
-rsync </path/to/local/directory/containing/your/files/> <username>@arc.ucalgary.ca:<path/to/directory/for/your/files/on/arc/>
+rsync </path/to/local/directory/containing/your/files/> \
+    <username>@arc.ucalgary.ca:<path/to/directory/for/your/files/on/arc/>
 #+end_src
 
 You will be prompted to enter your ARC account password after entering the above command.
 
-If you would like to transfer the entire content of a directory add a recursive flag =-r= or an archive flag =-a= to the =rsync= command. The =-a= flag is recommended if you would like to preserver timestamp among other things (more information by looking at =rsync= manual using =man rsync= command).
+If you would like to transfer the entire content of a directory add a recursive flag =-r= or an archive flag =-a= to the =rsync= command. The =-a= flag is recommended if you would like to preserve timestamp among other things (more information by looking at =rsync= manual using =man rsync= command).
 
 #+begin_src bash
-rsync -r </path/to/local/directory/containing/your/files/> <username>@arc.ucalgary.ca:<path/to/directory/for/your/files/on/arc/>
+rsync -r </path/to/local/directory/containing/your/files/> \
+    <username>@arc.ucalgary.ca:<path/to/directory/for/your/files/on/arc/>
 # or
-rsync -a </path/to/local/directory/containing/your/files/> <username>@arc.ucalgary.ca:<path/to/directory/for/your/files/on/arc/>
+rsync -a </path/to/local/directory/containing/your/files/> \
+    <username>@arc.ucalgary.ca:<path/to/directory/for/your/files/on/arc/>
 #+end_src
 
 *** c. Use MobaXterm for Windows users to transfer
@@ -233,12 +242,14 @@ Detailed instructions can be found [[https://usdrcg.gitbook.io/docs/lawrence-hpc
 - SSH Private Key: None
 - Check "Save Password" if you want
 
-*** Side note on files structures
+Note that this may not be a great option if you are uploading many and/or large files.
 
-I like to have a consistent file structure for each analysis pipeline. For this =example-msa.R= "pipeline", my files and directories will look like the following:
+*** Side note on files structures for this example
+
+I tend to keep consistent file structure for each project. For this =example-msa.R= "pipeline", my files and directories will look like the following:
 
 #+begin_src
-~/msa                   # name of the analysis
+~/msa                   # name of the project
 ~/msa/data              # contains all raw data for this analysis
 ~/msa/data/sample_set1/
 ~/msa/data/sample_set2/
@@ -280,7 +291,7 @@ conda activate your_environment
 Rscript your_R_script.R
 
 # Prints out date and time of completion
-data
+date
 #+end_src
 
 =SBATCH= options:
@@ -358,10 +369,10 @@ Rscript ~/msa/script/example-msa.R \
         --output ~/msa/out/example/aligned_asv.fasta
 
 # Prints out date and time of completion
-data
+date
 #+end_src
 
-For =example-msa.R=, I have specifically written it so that I can use command line arguments (e.g. those =--input= and =--output= flags you see), so that I don't have to edit =example-msa.R= each time I want to have different input and output files. Of course if you just specified the input and output files in your R script, the command under =# Commands= would just be this:
+For =example-msa.R=, I have specifically written it so that I can use command line arguments (i.e. the =--input= and =--output= flags), so that I don't have to edit =example-msa.R= each time I want to have different input and output files. Of course if you just specified the input and output files in your R script, the command under =# Commands= would just be this:
 
 #+begin_src bash
 # Commands
@@ -425,7 +436,7 @@ conda info --env
 
 More information on managing conda environments [[https://docs.conda.io/projects/conda/en/latest/user-guide/getting-started.html#managing-environments][here]].
 
-** auto_activate_base
+** auto activate base
 
 =auto_activate_base= is a configurable setting in conda. The default value is =True=, which means that conda will be automatically activated (shown by the =(base)= beside your command prompt) whenever you login to an account with conda installed (this would be your server account in this case).
 
