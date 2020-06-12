@@ -211,7 +211,7 @@ rsync </path/to/local/directory/containing/your/files/> <username>@arc.ucalgary.
 
 You will be prompted to enter your ARC account password after entering the above command.
 
-If you would like to transfer the entire content of a directory add a recursive flag =-r= or an archive flag =-a= to the =rsync= command. The =-a= flag is recommended if you would like to preserver timestamp among other things (more information by looking at =rsync= manual using =man rsync= command).
+If you would like to transfer the entire content of a directory add a recursive flag =-r= or an archive flag =-a= to the =rsync= command. The =-a= flag is recommended if you would like to preserve timestamp among other things (more information by looking at =rsync= manual using =man rsync= command).
 
 #+begin_src bash
 rsync -r </path/to/local/directory/containing/your/files/> <username>@arc.ucalgary.ca:<path/to/directory/for/your/files/on/arc/>
