@@ -30,6 +30,7 @@ It is strongly suggested to have some knowledge on using Unix command line inter
     - [[#example-slurm-script-for-running-example-msar][Example slurm script for running example-msa.R]]
   - [[#submit-slurm-batch-script][Submit Slurm batch script]]
   - [[#check-status-of-batch-script-job-submission][Check status of batch script job submission]]
+  - [[#results-files][Results files]]
 - [[#using-conda][Using conda]]
   - [[#conda-environments][Conda environments]]
   - [[#auto_activate_base][auto_activate_base]]
@@ -210,6 +211,14 @@ rsync </path/to/local/directory/containing/your/files/> <username>@arc.ucalgary.
 
 You will be prompted to enter your ARC account password after entering the above command.
 
+If you would like to transfer the entire content of a directory add a recursive flag =-r= or an archive flag =-a= to the =rsync= command. The =-a= flag is recommended if you would like to preserver timestamp among other things (more information by looking at =rsync= manual using =man rsync= command).
+
+#+begin_src bash
+rsync -r </path/to/local/directory/containing/your/files/> <username>@arc.ucalgary.ca:<path/to/directory/for/your/files/on/arc/>
+# or
+rsync -a </path/to/local/directory/containing/your/files/> <username>@arc.ucalgary.ca:<path/to/directory/for/your/files/on/arc/>
+#+end_src
+
 *** c. Use MobaXterm for Windows users to transfer
 
 I believe there is an "up arrow" icon on the left panel to upload files. More information available [[https://usdrcg.gitbook.io/docs/lawrence-hpc/transferring-files#mobaxterm][in this guide]]. Note that this may not be a great option if you are uploading many and/or large files.
@@ -380,6 +389,9 @@ squeue -u <username>
 
 An email may also be sent to you depending on your =--mail-type= setting.
 
+** Results files
+
+Result files will be saved to the location you specified in the R or Slurm batch script. To transfer the result outputs refer to earlier section on [[#transferring-files-to-the-server][transferring files]].
 
 * Using conda
 
