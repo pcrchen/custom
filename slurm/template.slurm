@@ -22,4 +22,4 @@ conda activate your_environment
 Rscript your_R_script.R
 
 # Prints out date and time of completion
-data
+date
