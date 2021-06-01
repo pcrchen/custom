@@ -233,7 +233,7 @@ Detailed instructions can be found [[https://usdrcg.gitbook.io/docs/lawrence-hpc
 - SSH Private Key: None
 - Check "Save Password" if you want
 
-*** Side note on files structures
+*** Side note on files structures for this example
 
 I like to have a consistent file structure for each analysis pipeline. For this =example-msa.R= "pipeline", my files and directories will look like the following:
 
@@ -358,7 +358,7 @@ Rscript ~/msa/script/example-msa.R \
         --output ~/msa/out/example/aligned_asv.fasta
 
 # Prints out date and time of completion
-data
+date
 #+end_src
 
 For =example-msa.R=, I have specifically written it so that I can use command line arguments (e.g. those =--input= and =--output= flags you see), so that I don't have to edit =example-msa.R= each time I want to have different input and output files. Of course if you just specified the input and output files in your R script, the command under =# Commands= would just be this:
