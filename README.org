@@ -25,7 +25,7 @@ It is strongly suggested to have some knowledge on using Unix command line inter
     - [[#b-use-rsync-to-copy-files-from-your-local-computer-to-the-server][b. Use =rsync= to copy files from your local computer to the server]]
     - [[#c-use-mobaxterm-for-windows-users-to-transfer][c. Use MobaXterm for Windows users to transfer]]
     - [[#d-use-cyberduck-for-windows-and-mac-users-to-transfer][d. Use Cyberduck for Windows and Mac users to transfer]]
-    - [[#side-note-on-files-structures][Side note on files structures]]
+    - [[#side-note-on-files-structures][Side note on files structures for this example]]
   - [[#prepare-slurm-batch-script][Prepare Slurm batch script]]
     - [[#example-slurm-script-for-running-example-msar][Example slurm script for running example-msa.R]]
   - [[#submit-slurm-batch-script][Submit Slurm batch script]]
@@ -280,7 +280,7 @@ conda activate your_environment
 Rscript your_R_script.R
 
 # Prints out date and time of completion
-data
+date
 #+end_src
 
 =SBATCH= options:
