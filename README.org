@@ -304,45 +304,50 @@ date
 =SBATCH= options:
 - =#SBATCH --nodes=1= specifies the number of nodes to use. For our use cases, this should always be 1.
 - =#SBATCH --ntasks=1= specifies the number of tasks to use. For our use cases, this should always be 1.
-- =#SBATCH --partition=single,lattice= specifies the computing cluster this use on ARC. For more information on the available clusters and their resources see the table below. Here, it is requesting either the =single= or =lattice= cluster.
-- =#SBATCH --cpus-per-task=8= specifies the number of cores to use for multithreaded commands. Make sure you are specifying the same number as in your R script. Here, it is specifying 8 cores.
+- =#SBATCH --partition=single,lattice= specifies the computing cluster this use on ARC. For more information on the available clusters and their resources see the table below. Here, it is requesting either the =single= or =lattice= cluster. I don't recommend using the GPU partition (=gpu-v100=) if you don't need a GPU for analysis, as GPU partition is in high demand.
+- =#SBATCH --cpus-per-task=8= specifies the number of cores to use for multithreaded commands. Make sure you are specifying the same number as in your R script. Here, it is specifying 8 cores (allowing 8 multithreads).
 - =#SBTACH --mem=0= specifies the amount of memory to use. The default unit is in MB. Here, with a value of 0, it is specifying to use all available memory on the node (that would be 12 GB for =single= and =lattice= nodes).
-- =#SBATCH --time=48:00:00= specifies the time limit for the job in HH:MM:SS format. You will have higher priority in the queue if this time limit value is lower. Here, the time limit is 48 hours.
+- =#SBATCH --time=48:00:00= specifies the time limit for the job in HH:MM:SS format. You will have higher priority in the queue if this time limit value is lower. Here, the time limit is 48 hours. And different cluster partition have different maximum allowed time limit (see table below).
 - =#SBATCH --job-name=jobname= specifies the name for this job. Here, the job name is =jobname=.
 - =#SBATCH --output=slurm-%x-%J.out= specifies the location to save the terminal output from the job submission. =%x= is the job name and =%J= is the job ID. Because the path doesn't begin with =/=, it is a relative path, and so the output file will be saved relative to the directory you submit the job using =sbatch=. If you want to make sure the output is always saved to the same directory, use an absolute path. e.g. =--output=/home/<username>/slurm/%x-%J.out=.
 - =#SBATCH --mail-type=END,FAIL= specifies if you want email notification. Here, an email will be sent when the job completes or fails. If you don't want this, change the value to =NONE=. You can also add another value to email you at the start of the job as well (=BEGIN,END,FAIL=).
 - =#SBATCH --mail-user=<username>@ucalgary.ca= specifies the email for the notifications. Here, email will be sent to =<username>@ucalgary.ca=.
 
-| Partition | Cores/node | Memory limit (MB) | Time limit (h) | GPUs/node |
-|-----------+------------+-------------------+----------------+-----------|
-| bigmem    |         80 |           3000000 |             24 |           |
-| cpu2019   |         40 |            185000 |            168 |           |
-| gpu-v100  |         40 |            753000 |             24 |         2 |
-| cpu2013   |         16 |            120000 |            168 |           |
-| parallel  |         12 |             23000 |            168 |           |
-| gpu       |         12 |             23000 |             72 |         3 |
-| lattice   |          8 |             12000 |            168 |           |
-| single    |          8 |             12000 |            168 |           |
+| Partition | Cores per node | Memory limit (MB) | Time limit (h) | GPUs pernode |
+|-----------+----------------+-------------------+----------------+--------------|
+| gpu-v100  |             40 |            753000 |             24 |            2 |
+| bigmem    |             80 |           3000000 |             24 |              |
+| cpu2021   |             48 |            185000 |            168 |              |
+| cpu2019   |             40 |            185000 |            168 |              |
+| cpu2013   |             16 |            120000 |            168 |              |
+| parallel  |             12 |             23000 |            168 |              |
+| lattice   |              8 |             12000 |            168 |              |
+| single    |              8 |             12000 |            168 |              |
 
+Note that the above table may be outdated. Refer to the [[https://rcs.ucalgary.ca/index.php/ARC_Cluster_Guide#Selecting_a_Partition][ARC Cluster Guide]] for up to date information.
 
 You can download this example Slurm batch script to ARC to edit using the command line interface text editor =nano=:
 
 #+begin_src bash
-wget https://raw.githubusercontent.com/pcrchen/custom/main/slurm/template.slurm -O ~/<path/to/your/desired/location>.slurm
+wget https://raw.githubusercontent.com/pcrchen/custom/main/slurm/template.slurm \
+    -O ~/<path/to/your/desired/location>.slurm
 
 nano ~/<path/to/your/desired/location>.slurm
 #+end_src
 
 After finishing editing with =nano=, press =ctrl-o= to save. Near the bottom there should be a prompt saying "File Name to Write", either just press =enter= to save to the same file or change the filename and then press =enter=. Once saved, press =ctrl-x= to exit.
 
-More information on how to use =nano= editor [[https://www.howtogeek.com/howto/42980/the-beginners-guide-to-nano-the-linux-command-line-text-editor/][here]]
+More information on how to use =nano= editor [[https://www.howtogeek.com/howto/42980/the-beginners-guide-to-nano-the-linux-command-line-text-editor/][here]].
+
+Another method is to edit the slurm file locally and then upload it to the server.
 
 *** Example slurm script for running example-msa.R
 
 Here I will be downloading the Slurm batch script template and edit using =nano= to run the =example-msa.R= script on a computing node.
 
 #+begin_src bash
-wget https://raw.githubusercontent.com/pcrchen/custom/main/slurm/template.slurm -O ~/msa/slurm/example.slurm
+wget https://raw.githubusercontent.com/pcrchen/custom/main/slurm/template.slurm -O \
+    ~/msa/slurm/example.slurm
 
 nano ~/msa/slurm/example.slurm
 #+end_src
