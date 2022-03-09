@@ -466,3 +466,20 @@ conda update -n base -c defaults conda
 - [[https://bioconda.github.io/user/install.html][Quick start on using Conda]]
 - [[https://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html#uninstalling-anaconda-or-miniconda][Uninstalling Miniconda3 on Linux]]
 
+* ARC Cluster Guides
+
+Below are links to guides provided the UC's Research Computing Services (RCS):
+
+- [[https://rcs.ucalgary.ca/RCS_Home_Page][RCS home page]]
+- [[https://rcs.ucalgary.ca/ARC_Cluster_Guide][ARC cluster guide]]
+- [[https://rcs.ucalgary.ca/General_Cluster_Guidelines_and_Policies][ARC cluster general guidelines and policies]]
+- [[https://rcs.ucalgary.ca/What_is_a_scheduler%3F][What is a job scheduler]]
+- [[https://rcs.ucalgary.ca/Running_jobs][Running slurm jobs]]
+- [[https://rcs.ucalgary.ca/Bioinformatics_applications][Bioinformatic application example]]
+- [[https://rcs.ucalgary.ca/Linux_Introduction][Linux Introduction]]
+- [[https://rcs.ucalgary.ca/How_to_transfer_data][How to transfer data]]
+- [[https://rcs.ucalgary.ca/HPC_Systems][UC high performance computing (HPC) systems]]
+- [[https://rcs.ucalgary.ca/HPC_Linux_topics][HPC Linux topics]]: A list of topics on which RCS technical support staff can provide one-on-one or group training
+- [[https://rcs.ucalgary.ca/Courses][Courses offered by RCS]]
+- [[https://rcs.ucalgary.ca/Data_storage_options_for_UofC_researchers][Data storage options for UofC researchers]]
+- [[https://rcs.ucalgary.ca/Security_and_privacy][Security and privacy]]
