@@ -413,6 +413,30 @@ Result files will be saved to the location you specified in the R or Slurm batch
 
 * Using conda
 
+** Speed up conda installation
+
+Recently, another package called =mamba= was developed that can be used to speed up conda installations. To use mamba, we need to first install it in conda default base environment.
+
+#+begin_src bash
+conda activate base # to ensure we are in the base environment
+
+conda install mamba
+#+end_src
+
+To use mamba to install conda packages:
+
+#+begin_src bash
+mamba <package-name>
+#+end_src
+
+Or to use mamba to install in new conda environment.
+
+#+begin_src bash
+mamba create --name <environment-name> <package-name>
+#+end_src
+
+More information on mamba [[https://mamba.readthedocs.io/en/latest/user_guide/mamba.html][here]].
+
 ** Conda environments
 
 Conda environments are used to compartmentalize your installed packages, because, for example, one may need to use different pipelines that require different versions of the same package.
