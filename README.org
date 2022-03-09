@@ -12,6 +12,13 @@ It is suggested to have some knowledge on using Unix command line interface (CLI
 - =rmdir= (remove empty directory)
 - =nano= (text editor, press =ctrl-x= to exit)
 
+https://linuxjourney.com/ also provides quite clear and concise guides on numerous Linux basics:
+
+- [[https://linuxjourney.com/lesson/the-shell][command line]]
+- [[https://linuxjourney.com/lesson/stdout-standard-out-redirect][text manipulation via command line]]
+- [[https://linuxjourney.com/lesson/file-permissions][file permissions]]
+- [[https://linuxjourney.com/lesson/rsync][rsync]]
+
 * Table of contents                                                     :TOC:
 - [[#prepare-r-script][Prepare R script]]
 - [[#setup-on-server][Setup on Server]]
