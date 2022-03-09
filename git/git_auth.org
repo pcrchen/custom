@@ -1,0 +1,37 @@
+As of 2021-08-13, account passwords are not accepted for authenticating git operations. Instead, git operations will require token-based authentication (e.g. personal access token) or OAuth/GitHub App installation token.
+
+* reference
+
+https://github.blog/2020-12-15-token-authentication-requirements-for-git-operations/
+https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token
+https://docs.github.com/en/authentication/securing-your-account-with-two-factor-authentication-2fa/configuring-two-factor-authentication
+https://www.cloudsavvyit.com/14870/how-to-set-up-https-personal-access-tokens-for-github-authentication/
+https://www.edgoad.com/2021/02/using-personal-access-tokens-with-git-and-github.html
+
+* setup personal access token for general git operations
+** get token
+
+1. log into GitHub
+2. go to personal access token settings
+   a. click on user icon at top right corner > =Settings= > =Developer settings= > =Personal access tokens=
+   b. go to https://github.com/settings/tokens
+3. click =Generate new token=
+4. give the token a description/name and select the scope of the token
+   a. select =repo= only to facilitate pull, push, clone, and commit actions
+5. click =Generate token=
+6. copy the token (to be used as password)
+
+** configure local git
+1. run a git operation, e.g. =git clone <private-repo>=, =git push=
+2. input copied token as password
+3. store credentials
+   a. temporary
+      #+begin_src bash
+      git config --local credential.helper "cache --timeout=86400"
+      #+end_src
+   b. permanently (can't be set to locally)
+      this saves the credentials to =~/.git-credentials=
+
+      #+begin_src bash
+      git config credential.helper store
+      #+end_src
