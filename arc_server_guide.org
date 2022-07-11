@@ -88,7 +88,7 @@ rm -rf ~/.condarc ~/.conda
 Download =setup-conda.sh= helper script (to download and install conda) to your home directory (the =~= shorthand below). The =\= at the end of the first means that the following line is the same command and not another separate command.
 
 #+begin_src bash
-wget https://raw.githubusercontent.com/pcrchen/custom/main/script/setup-conda.sh \
+wget https://raw.githubusercontent.com/pcrchen/custom/main/arc/script/setup-conda.sh \
     -O ~/setup-conda.sh
 #+end_src
 
@@ -104,6 +104,8 @@ To check if conda was installed correctly, logout the server (type =exit=) and r
 exit # exits the server
 ssh <username>@arc.ucalgary.ca
 #+end_src
+
+*** Check .condarc
 
 Another important thing to check is the priority order of the channels conda will use to install packages from (configured in =~/.condarc= file). Conda channels are where packages are hosted on, and [[https://bioconda.github.io/user/install.html#set-up-channels][the priority order of the channels is important when you install packages]]. Although, running the =setup_conda.sh= script should have configured the channels properly for you, it doesn't hurt to double check.
 
@@ -127,8 +129,16 @@ As you can see, =conda-forge= should be at the top, followed by =bioconda=, and 
 If your conda file does not look like the above, run the below command to copy a correct =.condarc= file to your home directory.
 
 #+begin_src bash
-wget https://raw.githubusercontent.com/pcrchen/custom/main/script/.condarc -O \
-    ~/.condarc
+wget https://raw.githubusercontent.com/pcrchen/custom/main/arc/script/.condarc \
+    -O ~/.condarc
+#+end_src
+
+*** Update conda after installation
+
+The conda installed using =setup.sh= is a year or two outdated. Run the below code to update conda after installation.
+
+#+begin_src bash
+conda update -n base -c defaults conda
 #+end_src
 
 ** Setup conda environment
